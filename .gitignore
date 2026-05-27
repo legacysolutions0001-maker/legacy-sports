@@ -47,3 +47,11 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Build outputs (not committed — generated at deploy time)
+artifacts/web/dist/
+artifacts/api-server/dist/
+lib/*/dist/
+
+# Render
+# (render.yaml is intentionally committed)

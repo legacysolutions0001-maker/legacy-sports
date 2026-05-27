@@ -3,20 +3,38 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Legacy Sports API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: schools
+    description: School management
+  - name: users
+    description: User management
+  - name: performances
+    description: Performance tracking
+  - name: attendance
+    description: Attendance tracking
+  - name: notifications
+    description: Notifications
+  - name: sports
+    description: Sport configuration
+  - name: analytics
+    description: Analytics and reports
+  - name: billing
+    description: Pricing, subscriptions, and invoices
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +42,970 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/lookup-school:
+    post:
+      operationId: lookupSchool
+      tags: [auth]
+      summary: Look up school by code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SchoolCodeInput"
+      responses:
+        "200":
+          description: School found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SchoolPublic"
+        "404":
+          description: School not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with credentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user session
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register player or coach
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistrationInput"
+      responses:
+        "201":
+          description: Registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /schools:
+    get:
+      operationId: listSchools
+      tags: [schools]
+      summary: List all schools
+      responses:
+        "200":
+          description: List of schools
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/School"
+    post:
+      operationId: createSchool
+      tags: [schools]
+      summary: Create a school
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SchoolInput"
+      responses:
+        "201":
+          description: School created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/School"
+
+  /schools/{id}:
+    get:
+      operationId: getSchool
+      tags: [schools]
+      summary: Get school by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: School
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/School"
+    put:
+      operationId: updateSchool
+      tags: [schools]
+      summary: Update school
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SchoolInput"
+      responses:
+        "200":
+          description: Updated school
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/School"
+    delete:
+      operationId: deleteSchool
+      tags: [schools]
+      summary: Delete school
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /schools/{id}/pause:
+    post:
+      operationId: pauseSchool
+      tags: [schools]
+      summary: Pause or unpause a school
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SchoolPauseInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/School"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List users
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+        - name: schoolId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserSummary"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create user (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDetail"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDetail"
+    put:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDetail"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /users/{id}/status:
+    patch:
+      operationId: updateUserStatus
+      tags: [users]
+      summary: Approve / reject / suspend user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserStatusUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSummary"
+
+  /users/{id}/reset-password:
+    post:
+      operationId: resetUserPassword
+      tags: [users]
+      summary: Reset a user's password (admin matrix-enforced)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordInput"
+      responses:
+        "200":
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "403":
+          description: Not allowed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/{id}/fitness:
+    patch:
+      operationId: updateFitness
+      tags: [users]
+      summary: Update player fitness status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FitnessUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /performances:
+    get:
+      operationId: listPerformances
+      tags: [performances]
+      summary: List performances
+      parameters:
+        - name: playerId
+          in: query
+          schema:
+            type: integer
+        - name: coachId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Performance records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Performance"
+    post:
+      operationId: createPerformance
+      tags: [performances]
+      summary: Log a performance record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PerformanceInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Performance"
+
+  /performances/{id}:
+    delete:
+      operationId: deletePerformance
+      tags: [performances]
+      summary: Delete performance record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /attendance:
+    get:
+      operationId: listAttendance
+      tags: [attendance]
+      summary: List attendance records
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: schoolId
+          in: query
+          schema:
+            type: integer
+        - name: coachId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Attendance records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttendanceRecord"
+    post:
+      operationId: markAttendance
+      tags: [attendance]
+      summary: Mark attendance for players
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttendanceBatch"
+      responses:
+        "201":
+          description: Attendance marked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: Get notifications for current user
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+    post:
+      operationId: sendNotification
+      tags: [notifications]
+      summary: Send notification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationInput"
+      responses:
+        "201":
+          description: Sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /notifications/{id}/read:
+    patch:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /sports:
+    get:
+      operationId: listSports
+      tags: [sports]
+      summary: List all sport configs
+      responses:
+        "200":
+          description: Sports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SportConfig"
+    post:
+      operationId: upsertSport
+      tags: [sports]
+      summary: Create or update sport config
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SportInput"
+      responses:
+        "200":
+          description: Sport config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SportConfig"
+
+  /sports/{id}:
+    delete:
+      operationId: deleteSport
+      tags: [sports]
+      summary: Delete sport config
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /analytics/summary:
+    get:
+      operationId: getAnalyticsSummary
+      tags: [analytics]
+      summary: Get platform analytics summary
+      responses:
+        "200":
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsSummary"
+
+  /analytics/leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [analytics]
+      summary: Get leaderboard data
+      parameters:
+        - name: schoolId
+          in: query
+          schema:
+            type: integer
+        - name: sport
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
+  # ── PRICING ────────────────────────────────────────────────────────────────
+  /pricing:
+    get:
+      operationId: getPricing
+      tags: [billing]
+      summary: Get platform pricing configuration (superadmin)
+      responses:
+        "200":
+          description: Pricing config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingConfig"
+    put:
+      operationId: updatePricing
+      tags: [billing]
+      summary: Update platform pricing configuration (superadmin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PricingConfigInput"
+      responses:
+        "200":
+          description: Updated pricing config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingConfig"
+
+  # ── SUBSCRIPTIONS ──────────────────────────────────────────────────────────
+  /subscriptions:
+    get:
+      operationId: listSubscriptions
+      tags: [billing]
+      summary: List subscriptions
+      responses:
+        "200":
+          description: List of subscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subscription"
+
+  /subscriptions/{schoolId}:
+    patch:
+      operationId: updateSubscription
+      tags: [billing]
+      summary: Update subscription settings for a school (superadmin)
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscriptionInput"
+      responses:
+        "200":
+          description: Updated subscription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+
+  /subscriptions/{schoolId}/preview:
+    get:
+      operationId: previewInvoice
+      tags: [billing]
+      summary: Preview the next invoice for a school
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Invoice preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvoicePreview"
+
+  /subscriptions/{schoolId}/invoice:
+    post:
+      operationId: generateInvoice
+      tags: [billing]
+      summary: Generate an invoice for a school
+      parameters:
+        - name: schoolId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Generated invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  # ── INVOICES ───────────────────────────────────────────────────────────────
+  /invoices:
+    get:
+      operationId: listInvoices
+      tags: [billing]
+      summary: List invoices
+      parameters:
+        - name: schoolId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invoice"
+
+  /invoices/{id}:
+    patch:
+      operationId: updateInvoice
+      tags: [billing]
+      summary: Override invoice total, due date, or notes (superadmin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvoiceUpdate"
+      responses:
+        "200":
+          description: Updated invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /invoices/{id}/pay:
+    post:
+      operationId: markInvoicePaid
+      tags: [billing]
+      summary: Mark invoice as paid
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method:
+                  type: string
+      responses:
+        "200":
+          description: Updated invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /invoices/{id}/unpay:
+    post:
+      operationId: markInvoiceUnpaid
+      tags: [billing]
+      summary: Reverse a payment (bounced/refunded)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /invoices/{id}/void:
+    post:
+      operationId: voidInvoice
+      tags: [billing]
+      summary: Void an invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Voided invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /invoices/{id}/remind:
+    post:
+      operationId: sendInvoiceReminders
+      tags: [billing]
+      summary: Send AI payment reminders for an invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                channels:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "201":
+          description: Reminder logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReminderLog"
+
+  # ── REMINDERS ──────────────────────────────────────────────────────────────
+  /reminders:
+    get:
+      operationId: listReminders
+      tags: [billing]
+      summary: List reminder logs
+      parameters:
+        - name: invoiceId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of reminder logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReminderLog"
+
+  # ── BILLING CYCLE ──────────────────────────────────────────────────────────
+  /billing/run-cycle:
+    post:
+      operationId: runBillingCycle
+      tags: [billing]
+      summary: Run the monthly billing cycle (superadmin)
+      responses:
+        "200":
+          description: Billing cycle result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingCycleResult"
+
+  /billing/mark-overdue:
+    post:
+      operationId: markOverdueAndSuspend
+      tags: [billing]
+      summary: Mark overdue invoices and suspend delinquent schools (superadmin)
+      responses:
+        "200":
+          description: Result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  suspended:
+                    type: integer
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +1013,982 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    SchoolCodeInput:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+
+    SchoolPublic:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: string
+        logoUrl:
+          type: string
+        primaryColor:
+          type: string
+        isPaused:
+          type: boolean
+        pauseMessage:
+          type: string
+      required: [id, name, code]
+
+    School:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: string
+        phone:
+          type: string
+        whatsappNumber:
+          type: string
+        address:
+          type: string
+        email:
+          type: string
+        ownerName:
+          type: string
+        ownerPhone:
+          type: string
+        ownerWhatsapp:
+          type: string
+        ownerEmail:
+          type: string
+        principalName:
+          type: string
+        logoUrl:
+          type: string
+        primaryColor:
+          type: string
+        isPaused:
+          type: boolean
+        pauseMessage:
+          type: string
+        pausedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required: [id, name, code]
+
+    SchoolInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        phone:
+          type: string
+        whatsappNumber:
+          type: string
+        address:
+          type: string
+        email:
+          type: string
+        ownerName:
+          type: string
+        ownerPhone:
+          type: string
+        ownerWhatsapp:
+          type: string
+        ownerEmail:
+          type: string
+        principalName:
+          type: string
+        primaryColor:
+          type: string
+        logoUrl:
+          type: string
+
+    SchoolPauseInput:
+      type: object
+      required: [paused]
+      properties:
+        paused:
+          type: boolean
+        message:
+          type: string
+
+    LoginInput:
+      type: object
+      required: [schoolCode, username, password]
+      properties:
+        schoolCode:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/SessionUser"
+        school:
+          $ref: "#/components/schemas/SchoolPublic"
+      required: [user]
+
+    SessionUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        username:
+          type: string
+        role:
+          type: string
+        schoolId:
+          type: ["integer", "null"]
+        sport:
+          type: string
+        status:
+          type: string
+        isOwner:
+          type: boolean
+      required: [id, name, username, role]
+
+    RegistrationInput:
+      type: object
+      required: [schoolCode, role, username, password, name, sport]
+      properties:
+        schoolCode:
+          type: string
+        role:
+          type: string
+          enum: [player, coach]
+        username:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        whatsappNumber:
+          type: string
+        address:
+          type: string
+        sport:
+          type: string
+        admissionNumber:
+          type: string
+        age:
+          type: integer
+        dateOfBirth:
+          type: string
+        gender:
+          type: string
+        className:
+          type: string
+        section:
+          type: string
+        rollNumber:
+          type: string
+        designation:
+          type: string
+        parentName:
+          type: string
+        parentPhone:
+          type: string
+        parentWhatsapp:
+          type: string
+        parentEmail:
+          type: string
+
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        username:
+          type: string
+        role:
+          type: string
+        sport:
+          type: string
+        status:
+          type: string
+        fitnessStatus:
+          type: string
+        schoolId:
+          type: ["integer", "null"]
+        admissionNumber:
+          type: ["string", "null"]
+        playerCode:
+          type: ["string", "null"]
+        coachCode:
+          type: ["string", "null"]
+        designation:
+          type: string
+        className:
+          type: string
+        section:
+          type: string
+        rollNumber:
+          type: string
+        createdAt:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        whatsappNumber:
+          type: string
+      required: [id, name, username, role]
+
+    UserDetail:
+      allOf:
+        - $ref: "#/components/schemas/UserSummary"
+        - type: object
+          properties:
+            address:
+              type: string
+            age:
+              type: ["integer", "null"]
+            dateOfBirth:
+              type: ["string", "null"]
+            gender:
+              type: string
+            parentName:
+              type: string
+            parentPhone:
+              type: string
+            parentWhatsapp:
+              type: string
+            parentEmail:
+              type: string
+            photoUrl:
+              type: string
+            isOwner:
+              type: boolean
+
+    UserInput:
+      type: object
+      required: [username, password, name, role]
+      properties:
+        schoolId:
+          type: integer
+        role:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        whatsappNumber:
+          type: string
+        sport:
+          type: string
+        address:
+          type: string
+        designation:
+          type: string
+        admissionNumber:
+          type: string
+        age:
+          type: integer
+        dateOfBirth:
+          type: string
+        gender:
+          type: string
+        className:
+          type: string
+        section:
+          type: string
+        rollNumber:
+          type: string
+        parentName:
+          type: string
+        parentPhone:
+          type: string
+        parentWhatsapp:
+          type: string
+        parentEmail:
+          type: string
+
+    UserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        whatsappNumber:
+          type: string
+        address:
+          type: string
+        sport:
+          type: string
+        age:
+          type: integer
+        dateOfBirth:
+          type: string
+        gender:
+          type: string
+        className:
+          type: string
+        section:
+          type: string
+        rollNumber:
+          type: string
+        designation:
+          type: string
+        parentName:
+          type: string
+        parentPhone:
+          type: string
+        parentWhatsapp:
+          type: string
+        parentEmail:
+          type: string
+        photoUrl:
+          type: string
+
+    ResetPasswordInput:
+      type: object
+      required: [newPassword]
+      properties:
+        newPassword:
+          type: string
+          minLength: 6
+
+    UserStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [pending, approved, rejected, suspended]
+
+    FitnessUpdate:
+      type: object
+      required: [fitnessStatus]
+      properties:
+        fitnessStatus:
+          type: string
+          enum: [fit, injured, recovering, resting]
+
+    SportField:
+      type: object
+      required: [key, label, type]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+          enum: [int, float, text]
+        section:
+          type: string
+        min:
+          type: number
+        auto:
+          type: boolean
+        placeholder:
+          type: string
+
+    SportConfig:
+      type: object
+      properties:
+        id:
+          type: integer
+        sportName:
+          type: string
+        icon:
+          type: string
+        fieldsJson:
+          type: array
+          items:
+            $ref: "#/components/schemas/SportField"
+        updatedAt:
+          type: string
+      required: [id, sportName]
+
+    SportInput:
+      type: object
+      required: [sportName]
+      properties:
+        sportName:
+          type: string
+        icon:
+          type: string
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/SportField"
+
+    Performance:
+      type: object
+      properties:
+        id:
+          type: integer
+        playerId:
+          type: integer
+        coachId:
+          type: ["integer", "null"]
+        sport:
+          type: string
+        sessionType:
+          type: string
+        sessionNotes:
+          type: string
+        customData:
+          type: object
+          additionalProperties: true
+        recordedAt:
+          type: string
+        createdAt:
+          type: string
+      required: [id, playerId, sport]
+
+    PerformanceInput:
+      type: object
+      required: [playerId, sport, customData]
+      properties:
+        playerId:
+          type: integer
+        sport:
+          type: string
+        sessionType:
+          type: string
+        sessionNotes:
+          type: string
+        customData:
+          type: object
+          additionalProperties: true
+        recordedAt:
+          type: string
+
+    AttendanceRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        schoolId:
+          type: integer
+        coachId:
+          type: ["integer", "null"]
+        attDate:
+          type: string
+        status:
+          type: string
+        sessionType:
+          type: string
+        notes:
+          type: string
+        createdAt:
+          type: string
+        userName:
+          type: string
+      required: [id, userId, schoolId, attDate, status]
+
+    AttendanceMark:
+      type: object
+      required: [userId, status]
+      properties:
+        userId:
+          type: integer
+        status:
+          type: string
+        notes:
+          type: string
+
+    AttendanceBatch:
+      type: object
+      required: [schoolId, attDate, records]
+      properties:
+        schoolId:
+          type: integer
+        attDate:
+          type: string
+        sessionType:
+          type: string
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttendanceMark"
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        senderRole:
+          type: string
+        senderId:
+          type: integer
+        senderName:
+          type: string
+        receiverRole:
+          type: string
+        receiverId:
+          type: integer
+        message:
+          type: string
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+      required: [id, senderName, message]
+
+    NotificationInput:
+      type: object
+      required: [receiverId, receiverRole, message]
+      properties:
+        receiverId:
+          type: integer
+        receiverRole:
+          type: string
+        message:
+          type: string
+
+    AnalyticsSummary:
+      type: object
+      properties:
+        totalSchools:
+          type: integer
+        totalPlayers:
+          type: integer
+        totalCoaches:
+          type: integer
+        totalPerformances:
+          type: integer
+        totalAttendance:
+          type: integer
+        sportCounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/SportCount"
+        schoolCounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/SchoolCount"
+        attendanceTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttendanceTrendPoint"
+      required:
+        - totalSchools
+        - totalPlayers
+        - totalCoaches
+        - totalPerformances
+        - totalAttendance
+
+    SportCount:
+      type: object
+      required: [sport, count]
+      properties:
+        sport:
+          type: string
+        count:
+          type: integer
+
+    SchoolCount:
+      type: object
+      required: [schoolName, count]
+      properties:
+        schoolName:
+          type: string
+        count:
+          type: integer
+
+    AttendanceTrendPoint:
+      type: object
+      required: [date, count]
+      properties:
+        date:
+          type: string
+        count:
+          type: integer
+
+    LeaderboardPlayer:
+      type: object
+      required: [id, name, total, sessions]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        total:
+          type: number
+        sessions:
+          type: integer
+
+    LeaderboardEntry:
+      type: object
+      required: [schoolName, sport, players]
+      properties:
+        schoolName:
+          type: string
+        sport:
+          type: string
+        icon:
+          type: string
+        players:
+          type: array
+          items:
+            $ref: "#/components/schemas/LeaderboardPlayer"
+
+    # ── BILLING SCHEMAS ───────────────────────────────────────────────────────
+    PricingConfig:
+      type: object
+      required:
+        - id
+        - baseFee
+        - perPlayerFee
+        - perSportFee
+        - modAttendance
+        - modPerformance
+        - modAnalytics
+        - modLeaderboard
+        - modCalendar
+        - modMessaging
+        - modPhotos
+        - modNotifications
+        - modFees
+        - modRegistration
+        - modAi
+        - modWebsite
+        - currency
+        - gracePeriodDays
+        - reminderDaysBefore
+        - autoSuspendAfterDays
+      properties:
+        id:
+          type: integer
+        baseFee:
+          type: integer
+          description: Base subscription fee per month
+        perPlayerFee:
+          type: integer
+          description: Fee per active player per month
+        perSportFee:
+          type: integer
+          description: Fee per enabled sport per month
+        modAttendance:
+          type: integer
+        modPerformance:
+          type: integer
+        modAnalytics:
+          type: integer
+        modLeaderboard:
+          type: integer
+        modCalendar:
+          type: integer
+        modMessaging:
+          type: integer
+        modPhotos:
+          type: integer
+        modNotifications:
+          type: integer
+        modFees:
+          type: integer
+        modRegistration:
+          type: integer
+        modAi:
+          type: integer
+        modWebsite:
+          type: integer
+        currency:
+          type: string
+        gracePeriodDays:
+          type: integer
+        reminderDaysBefore:
+          type: integer
+        autoSuspendAfterDays:
+          type: integer
+        upiId:
+          type: string
+        qrCodeUrl:
+          type: string
+        account1BankName:
+          type: string
+        account1AccountNumber:
+          type: string
+        account1IfscCode:
+          type: string
+        account1HolderName:
+          type: string
+        account2BankName:
+          type: string
+        account2AccountNumber:
+          type: string
+        account2IfscCode:
+          type: string
+        account2HolderName:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+
+    PricingConfigInput:
+      type: object
+      properties:
+        baseFee:
+          type: integer
+        perPlayerFee:
+          type: integer
+        perSportFee:
+          type: integer
+        modAttendance:
+          type: integer
+        modPerformance:
+          type: integer
+        modAnalytics:
+          type: integer
+        modLeaderboard:
+          type: integer
+        modCalendar:
+          type: integer
+        modMessaging:
+          type: integer
+        modPhotos:
+          type: integer
+        modNotifications:
+          type: integer
+        modFees:
+          type: integer
+        modRegistration:
+          type: integer
+        modAi:
+          type: integer
+        modWebsite:
+          type: integer
+        currency:
+          type: string
+        gracePeriodDays:
+          type: integer
+        reminderDaysBefore:
+          type: integer
+        autoSuspendAfterDays:
+          type: integer
+        upiId:
+          type: string
+        qrCodeUrl:
+          type: string
+        account1BankName:
+          type: string
+        account1AccountNumber:
+          type: string
+        account1IfscCode:
+          type: string
+        account1HolderName:
+          type: string
+        account2BankName:
+          type: string
+        account2AccountNumber:
+          type: string
+        account2IfscCode:
+          type: string
+        account2HolderName:
+          type: string
+
+    Subscription:
+      type: object
+      required: [id, schoolId, planName, status, autoBill]
+      properties:
+        id:
+          type: integer
+        schoolId:
+          type: integer
+        planName:
+          type: string
+        billingCycleDay:
+          type: integer
+        status:
+          type: string
+        autoBill:
+          type: boolean
+        nextInvoiceDate:
+          type: string
+          format: date
+        lastInvoicedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SubscriptionInput:
+      type: object
+      properties:
+        planName:
+          type: string
+        billingCycleDay:
+          type: integer
+        status:
+          type: string
+        autoBill:
+          type: boolean
+        nextInvoiceDate:
+          type: string
+          format: date
+
+    InvoiceLineItem:
+      type: object
+      required: [label, qty, unit, total]
+      properties:
+        label:
+          type: string
+        qty:
+          type: number
+        unit:
+          type: number
+        total:
+          type: number
+
+    Invoice:
+      type: object
+      required: [id, schoolId, invoiceNumber, periodStart, periodEnd, dueDate, subtotal, total, currency, status]
+      properties:
+        id:
+          type: integer
+        schoolId:
+          type: integer
+        invoiceNumber:
+          type: string
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+        dueDate:
+          type: string
+          format: date
+        subtotal:
+          type: number
+        total:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [pending, paid, overdue, void]
+        paidAt:
+          type: string
+          format: date-time
+        paidMethod:
+          type: string
+        notes:
+          type: string
+        lineItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/InvoiceLineItem"
+        createdAt:
+          type: string
+          format: date-time
+
+    InvoiceUpdate:
+      type: object
+      properties:
+        total:
+          type: number
+        subtotal:
+          type: number
+        dueDate:
+          type: string
+          format: date
+        notes:
+          type: string
+        status:
+          type: string
+
+    InvoicePreview:
+      type: object
+      required: [subtotal, total, currency, playerCount]
+      properties:
+        subtotal:
+          type: number
+        total:
+          type: number
+        currency:
+          type: string
+        playerCount:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/InvoiceLineItem"
+
+    ReminderLog:
+      type: object
+      required: [id, invoiceId, channel, status, createdAt]
+      properties:
+        id:
+          type: integer
+        invoiceId:
+          type: integer
+        schoolId:
+          type: integer
+        channel:
+          type: string
+        recipient:
+          type: string
+        subject:
+          type: string
+        body:
+          type: string
+        status:
+          type: string
+        provider:
+          type: string
+        error:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    BillingCycleResult:
+      type: object
+      required: [invoices, suspended]
+      properties:
+        invoices:
+          type: integer
+        suspended:
+          type: integer

@@ -1,8 +1,40 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
+import authRouter from "./auth";
+import schoolsRouter from "./schools";
+import schoolSettingsRouter from "./school-settings";
+import usersRouter from "./users";
+import performancesRouter from "./performances";
+import attendanceRouter from "./attendance";
+import notificationsRouter from "./notifications";
+import sportsRouter from "./sports";
+import analyticsRouter from "./analytics";
+import sessionsRouter from "./sessions";
+import messagesRouter from "./messages";
+import feesRouter from "./fees";
+import subscriptionsRouter from "./subscriptions";
+import documentsRouter from "./documents";
+import parentRouter from "./parent";
+import exportRouter from "./export";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(authRouter);
+router.use(parentRouter);
+router.use(schoolsRouter);
+router.use(schoolSettingsRouter);
+router.use(usersRouter);
+router.use(performancesRouter);
+router.use(attendanceRouter);
+router.use(notificationsRouter);
+router.use(sportsRouter);
+router.use(analyticsRouter);
+router.use(sessionsRouter);
+router.use(messagesRouter);
+router.use(feesRouter);
+router.use(subscriptionsRouter);
+router.use(documentsRouter);
+router.use(exportRouter);
 
 export default router;

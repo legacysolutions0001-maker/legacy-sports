@@ -1,0 +1,10 @@
+ALTER TABLE "pricing_config" ADD COLUMN IF NOT EXISTS "upi_id" text DEFAULT '';
+ALTER TABLE "pricing_config" ADD COLUMN IF NOT EXISTS "qr_code_url" text DEFAULT '';
+ALTER TABLE "pricing_config" ADD COLUMN IF NOT EXISTS "account1_bank_name" text DEFAULT '';
+ALTER TABLE "pricing_config" ADD COLUMN IF NOT EXISTS "account1_account_number" text DEFAULT '';
+ALTER TABLE "pricing_config" ADD COLUMN IF NOT EXISTS "account1_ifsc_code" text DEFAULT '';
+ALTER TABLE "pricing_config" ADD COLUMN IF NOT EXISTS "account1_holder_name" text DEFAULT '';
+ALTER TABLE "pricing_config" ADD COLUMN IF NOT EXISTS "account2_bank_name" text DEFAULT '';
+ALTER TABLE "pricing_config" ADD COLUMN IF NOT EXISTS "account2_account_number" text DEFAULT '';
+ALTER TABLE "pricing_config" ADD COLUMN IF NOT EXISTS "account2_ifsc_code" text DEFAULT '';
+ALTER TABLE "pricing_config" ADD COLUMN IF NOT EXISTS "account2_holder_name" text DEFAULT '';
