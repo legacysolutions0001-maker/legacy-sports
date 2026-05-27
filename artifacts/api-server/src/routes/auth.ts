@@ -2,6 +2,8 @@ import { Router, type IRouter } from "express";
 import { eq, and } from "drizzle-orm";
 import { db } from "../lib/db";
 import { hashPassword, verifyPassword } from "../lib/auth";
+import { setLogoutAllTimestamp } from "../lib/logoutTokens";
+import { requireRole } from "../middlewares/requireAuth";
 import {
   usersTable,
   schoolsTable,
@@ -101,6 +103,7 @@ router.post("/auth/login", async (req, res) => {
     req.session.schoolId = null;
     req.session.userName = u.name;
     req.session.isOwner = u.isOwner ?? false;
+    req.session.loginAt = Date.now();
 
     res.json({
       user: {
@@ -170,6 +173,7 @@ router.post("/auth/login", async (req, res) => {
   req.session.schoolId = u.schoolId;
   req.session.userName = u.name;
   req.session.isOwner = false;
+  req.session.loginAt = Date.now();
 
   res.json({
     user: {
@@ -200,6 +204,15 @@ router.post("/auth/login", async (req, res) => {
 router.post("/auth/logout", (req, res) => {
   req.session.destroy(() => {
     res.json({ message: "Logged out successfully" });
+  });
+});
+
+// POST /api/auth/logout-all — superadmin only: invalidate all sessions for this user
+router.post("/auth/logout-all", requireRole("superadmin"), (req, res) => {
+  const userId = req.session.userId!;
+  setLogoutAllTimestamp(userId);
+  req.session.destroy(() => {
+    res.json({ message: "Logged out from all devices" });
   });
 });
 

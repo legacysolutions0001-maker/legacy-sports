@@ -1,8 +1,16 @@
 import type { Request, Response, NextFunction } from "express";
+import { getLogoutAllTimestamp } from "../lib/logoutTokens";
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (!req.session.userId) {
     res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const loginAt = req.session.loginAt ?? 0;
+  const loggedOutAllAt = getLogoutAllTimestamp(req.session.userId);
+  if (loggedOutAllAt > loginAt) {
+    req.session.destroy(() => {});
+    res.status(401).json({ error: "Session invalidated. Please log in again." });
     return;
   }
   next();
@@ -12,6 +20,13 @@ export function requireRole(...roles: string[]) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.session.userId) {
       res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    const loginAt = req.session.loginAt ?? 0;
+    const loggedOutAllAt = getLogoutAllTimestamp(req.session.userId);
+    if (loggedOutAllAt > loginAt) {
+      req.session.destroy(() => {});
+      res.status(401).json({ error: "Session invalidated. Please log in again." });
       return;
     }
     if (!req.session.role || !roles.includes(req.session.role)) {
@@ -27,12 +42,10 @@ export function requireSchoolAccess(req: Request, res: Response, next: NextFunct
     res.status(401).json({ error: "Not authenticated" });
     return;
   }
-  // Superadmin can access all schools
   if (req.session.role === "superadmin") {
     next();
     return;
   }
-  // Other roles must have a schoolId
   if (!req.session.schoolId) {
     res.status(403).json({ error: "No school context" });
     return;

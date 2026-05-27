@@ -1,9 +1,16 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Trophy, LayoutDashboard, Users, GraduationCap, ClipboardList, Activity, ActivitySquare, Bell, BarChart3, LogOut, Settings, Calendar as CalIcon, MessageSquare, DollarSign, SlidersHorizontal, Wallet, FileText, Award, Baby, CheckSquare, TrendingUp, CreditCard, Info } from "lucide-react";
 import { useSchoolSettings } from "@/hooks/use-school-settings";
-import { cn } from "@/lib/utils";
 import { SiteFooter } from "@/components/site-footer";
 import {
   Sidebar,
@@ -21,12 +28,11 @@ import {
 } from "@/components/ui/sidebar";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, school, logout } = useAuth();
+  const { user, school, logout, logoutAll } = useAuth();
   const [location] = useLocation();
   const ss = useSchoolSettings();
   const isSuper = user?.role === "superadmin";
 
-  // Legacy standalone parent login page (kept for backwards compat)
   if (location.startsWith("/parent-login")) {
     return <>{children}</>;
   }
@@ -290,7 +296,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     </SidebarMenuItem>
                   )}
 
-                  {!isParent && (isSchoolAdmin) && (
+                  {!isParent && isSchoolAdmin && (
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild isActive={location.startsWith("/school-settings")}>
                         <Link href="/school-settings">
@@ -305,7 +311,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </SidebarGroup>
           </SidebarContent>
           <SidebarFooter className="border-t border-sidebar-border p-4">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sidebar-primary/10 text-sidebar-primary font-bold">
                 {user.name.charAt(0)}
               </div>
@@ -314,29 +320,59 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <span className="text-xs text-sidebar-foreground/60 capitalize truncate">{role.replace('_', ' ')}</span>
               </div>
             </div>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={location === "/profile"}>
-                  <Link href="/profile">
-                    <Settings />
-                    <span>Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => logout()}>
-                  <LogOut className="text-destructive" />
-                  <span className="text-destructive">Logout</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
           </SidebarFooter>
         </Sidebar>
+
         <div className="flex flex-1 flex-col w-full">
           <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 shadow-sm">
             <SidebarTrigger />
-            <div className="flex-1"></div>
+            <div className="flex-1" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm select-none">
+                    {user.name.charAt(0)}
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-medium">{user.name}</span>
+                    <span className="text-xs text-muted-foreground font-normal capitalize">{role.replace('_', ' ')}</span>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/profile" className="flex items-center cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
+                </DropdownMenuItem>
+                {isSuperadmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => logoutAll()}
+                      className="text-orange-600 focus:text-orange-600 focus:bg-orange-50 cursor-pointer"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Logout from all devices</span>
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => logout()}
+                  className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </header>
+
           <main className="flex-1 overflow-auto bg-muted/30">
             {isDemoSchool && (
               <div className="bg-yellow-400 text-yellow-900 px-4 py-2 text-sm font-semibold flex items-center gap-2">

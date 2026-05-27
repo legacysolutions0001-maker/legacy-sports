@@ -7,6 +7,7 @@ declare module "express-session" {
     schoolId?: number | null;
     userName?: string;
     isOwner?: boolean;
+    loginAt?: number;
     // Parent portal session fields
     parentPlayerId?: number;
     parentSchoolId?: number;

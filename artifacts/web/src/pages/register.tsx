@@ -289,13 +289,6 @@ export default function Register() {
                           <FormMessage />
                         </FormItem>
                       )} />
-                      <FormField control={form2.control} name="rollNumber" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-zinc-300">Roll No.</FormLabel>
-                          <FormControl><Input data-testid="input-roll" placeholder="Roll" className="bg-zinc-800 border-zinc-700 text-white" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
                       <FormField control={form2.control} name="parentName" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-zinc-300">Parent Name</FormLabel>

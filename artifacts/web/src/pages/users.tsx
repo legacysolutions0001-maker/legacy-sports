@@ -585,11 +585,7 @@ function CreateUserDialog({ viewerRole, viewerSchoolId: _viewerSchoolId, onCreat
                   <Input id="new-section" data-testid="input-new-section" value={section} onChange={(e) => setSection(e.target.value)} placeholder="e.g. A" />
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="space-y-1">
-                  <Label htmlFor="new-roll">Roll No.</Label>
-                  <Input id="new-roll" data-testid="input-new-roll" value={rollNumber} onChange={(e) => setRollNumber(e.target.value)} placeholder="Roll" />
-                </div>
+              <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label htmlFor="new-age">Age</Label>
                   <Input id="new-age" data-testid="input-new-age" type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="Age" />
