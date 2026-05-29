@@ -22,7 +22,36 @@ router.get("/performances", requireAuth, async (req, res) => {
       conditions.push(eq(performancesTable.coachId, session.userId!));
     }
     if (playerId) conditions.push(eq(performancesTable.playerId, parseInt(playerId)));
+  } else if (session.role !== "superadmin" && session.schoolId) {
+    // school_admin, sub_admin — restrict to their own school's players via join
+    if (playerId) conditions.push(eq(performancesTable.playerId, parseInt(playerId)));
+    if (coachId) conditions.push(eq(performancesTable.coachId, parseInt(coachId)));
+
+    const performances = await db
+      .select({
+        id: performancesTable.id,
+        playerId: performancesTable.playerId,
+        coachId: performancesTable.coachId,
+        sport: performancesTable.sport,
+        sessionType: performancesTable.sessionType,
+        sessionNotes: performancesTable.sessionNotes,
+        customData: performancesTable.customData,
+        recordedAt: performancesTable.recordedAt,
+      })
+      .from(performancesTable)
+      .innerJoin(usersTable, eq(performancesTable.playerId, usersTable.id))
+      .where(
+        and(
+          eq(usersTable.schoolId, session.schoolId),
+          conditions.length ? and(...conditions) : undefined,
+        ),
+      )
+      .orderBy(performancesTable.recordedAt);
+
+    res.json(performances);
+    return;
   } else {
+    // superadmin — optional filters only
     if (playerId) conditions.push(eq(performancesTable.playerId, parseInt(playerId)));
     if (coachId) conditions.push(eq(performancesTable.coachId, parseInt(coachId)));
   }
@@ -53,6 +82,23 @@ router.post("/performances", requireRole("coach", "school_admin", "superadmin"),
     return;
   }
 
+  // Enforce school isolation: non-superadmins can only record for their own school's players
+  if (session.role !== "superadmin" && session.schoolId) {
+    const player = await db
+      .select({ schoolId: usersTable.schoolId })
+      .from(usersTable)
+      .where(eq(usersTable.id, body.playerId))
+      .limit(1);
+    if (!player.length) {
+      res.status(404).json({ error: "Player not found" });
+      return;
+    }
+    if (player[0]!.schoolId !== session.schoolId) {
+      res.status(403).json({ error: "Cannot record performance for a player in another school" });
+      return;
+    }
+  }
+
   const [perf] = await db
     .insert(performancesTable)
     .values({
@@ -72,6 +118,28 @@ router.post("/performances", requireRole("coach", "school_admin", "superadmin"),
 // DELETE /api/performances/:id
 router.delete("/performances/:id", requireRole("coach", "school_admin", "superadmin"), async (req, res) => {
   const id = parseInt(String(req.params["id"]));
+  const session = req.session;
+
+  // Non-superadmins can only delete performances of their own school's players
+  if (session.role !== "superadmin" && session.schoolId) {
+    const perf = await db
+      .select({ playerId: performancesTable.playerId })
+      .from(performancesTable)
+      .where(eq(performancesTable.id, id))
+      .limit(1);
+    if (perf.length) {
+      const player = await db
+        .select({ schoolId: usersTable.schoolId })
+        .from(usersTable)
+        .where(eq(usersTable.id, perf[0]!.playerId))
+        .limit(1);
+      if (player.length && player[0]!.schoolId !== session.schoolId) {
+        res.status(403).json({ error: "Access denied" });
+        return;
+      }
+    }
+  }
+
   await db.delete(performancesTable).where(eq(performancesTable.id, id));
   res.json({ message: "Performance record deleted" });
 });
