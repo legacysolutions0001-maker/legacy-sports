@@ -3,13 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, TrendingUp, Users, GraduationCap, Activity, ClipboardList } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, PieChart, Pie, Cell, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, PieChart, Pie, Cell } from "recharts";
+import { useAuth } from "@/hooks/use-auth";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--destructive))", "hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))"];
 
 export default function Analytics() {
+  const { user } = useAuth();
   const { data: summary, isLoading } = useGetAnalyticsSummary();
   const { data: leaderboard, isLoading: lbLoading } = useGetLeaderboard();
+
+  const isSuperadmin = user?.role === "superadmin";
 
   if (isLoading) return (
     <div className="p-6 space-y-4">
@@ -20,7 +24,7 @@ export default function Analytics() {
   );
 
   const stats = [
-    { label: "Schools", value: summary?.totalSchools ?? 0, icon: GraduationCap },
+    ...(isSuperadmin ? [{ label: "Schools", value: summary?.totalSchools ?? 0, icon: GraduationCap }] : []),
     { label: "Players", value: summary?.totalPlayers ?? 0, icon: Users },
     { label: "Coaches", value: summary?.totalCoaches ?? 0, icon: Users },
     { label: "Sessions", value: summary?.totalPerformances ?? 0, icon: Activity },
@@ -31,7 +35,9 @@ export default function Analytics() {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Analytics</h1>
-        <p className="text-muted-foreground">Platform-wide performance metrics</p>
+        <p className="text-muted-foreground">
+          {isSuperadmin ? "Platform-wide performance metrics" : "Your school's performance metrics"}
+        </p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -68,7 +74,7 @@ export default function Analytics() {
           </Card>
         )}
 
-        {summary?.schoolCounts && summary.schoolCounts.length > 1 && (
+        {isSuperadmin && summary?.schoolCounts && summary.schoolCounts.length > 1 && (
           <Card>
             <CardHeader><CardTitle className="text-base">Players by School</CardTitle></CardHeader>
             <CardContent>
@@ -118,7 +124,7 @@ export default function Analytics() {
                 <div key={ei} data-testid={`leaderboard-entry-${ei}`}>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="font-medium text-sm">{entry.sport}</span>
-                    <Badge variant="outline" className="text-xs">{entry.schoolName}</Badge>
+                    {isSuperadmin && <Badge variant="outline" className="text-xs">{entry.schoolName}</Badge>}
                   </div>
                   <div className="space-y-1">
                     {entry.players.slice(0, 3).map((p, pi) => (
