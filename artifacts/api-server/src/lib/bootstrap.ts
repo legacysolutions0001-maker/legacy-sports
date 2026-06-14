@@ -9,7 +9,37 @@ import migrationSql from "../../../../lib/db/drizzle/0000_melted_shatterstar.sql
 
 const IGNORABLE = /already exists|duplicate/i;
 
+async function cleanupConflictingTables(): Promise<void> {
+  const hasSchoolId = await pool
+    .query(
+      `SELECT 1 FROM information_schema.columns
+       WHERE table_schema='public' AND table_name='users' AND column_name='school_id'`,
+    )
+    .then((r) => r.rows.length > 0)
+    .catch(() => false);
+
+  const usersExists = await pool
+    .query(
+      `SELECT 1 FROM information_schema.tables
+       WHERE table_schema='public' AND table_name='users'`,
+    )
+    .then((r) => r.rows.length > 0)
+    .catch(() => false);
+
+  if (usersExists && !hasSchoolId) {
+    logger.warn("Detected legacy-business tables in shared DB — dropping conflicting tables");
+    for (const tbl of ["attendance", "invoices", "messages", "notifications", "subscriptions", "users"]) {
+      await pool.query(`DROP TABLE IF EXISTS "${tbl}" CASCADE`).catch((err) =>
+        logger.warn({ err, tbl }, "Could not drop conflicting table"),
+      );
+    }
+    logger.info("Conflicting tables removed — sports schema will be created fresh");
+  }
+}
+
 export async function runMigrations(): Promise<void> {
+  await cleanupConflictingTables();
+
   const sql: string = migrationSql as string;
   const statements = sql
     .split(/-->\s*statement-breakpoint/)
