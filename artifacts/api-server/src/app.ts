@@ -55,8 +55,7 @@ const allowedOrigins: string[] = [
     .map((d) => d.trim())
     .filter(Boolean)
     .map((d) => `https://${d}`),
-  "https://legacy-sports-xmoq.onrender.com",
-  "https://legacy-sports-ql8y.onrender.com",
+  // Add your Render URL via the RENDER_EXTERNAL_URL env var — no hardcoding needed
   ...(renderUrl ? [renderUrl.replace(/\/$/, "")] : []),
   ...(corsOrigin ? [corsOrigin.replace(/\/$/, "")] : []),
 ];
