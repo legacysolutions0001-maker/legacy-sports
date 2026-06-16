@@ -55,3 +55,4 @@ lib/*/dist/
 
 # Render
 # (render.yaml is intentionally committed)
+"pnpm-lock.yaml" 
