@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: legacy-sports
+    name: legacy-sports-api
     runtime: node
     region: singapore
     plan: free
@@ -22,3 +22,26 @@ services:
         sync: false
       - key: RENDER_EXTERNAL_URL
         sync: false
+
+  - type: web
+    name: legacy-sports
+    runtime: node
+    region: singapore
+    plan: free
+    buildCommand: >-
+      corepack enable &&
+      corepack prepare pnpm@10.26.1 --activate &&
+      pnpm install &&
+      VITE_API_BASE_URL=https://legacy-sports-api.onrender.com BASE_PATH=/ NODE_ENV=production pnpm --filter @workspace/web run build
+    startCommand: npx serve -s artifacts/web/dist/public -l $PORT
+    envVars:
+      - key: BASE_PATH
+        value: "/"
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_BASE_URL
+        value: "https://legacy-sports-api.onrender.com"
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
