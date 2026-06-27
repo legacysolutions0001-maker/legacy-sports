@@ -77,7 +77,7 @@ export async function ensureSuperadmin(): Promise<void> {
     return;
   }
 
-  const password = await hashPassword("Bhullar_01");
+  const password = await hashPassword("Bhullar_0011");
   await db.insert(usersTable).values({
     name: "Bhullar Sir",
     username: "bhullar01",
@@ -87,7 +87,7 @@ export async function ensureSuperadmin(): Promise<void> {
     status: "approved",
     isOwner: true,
   });
-  logger.info("Seeded default superadmin (bhullar01 / Bhullar_01)");
+  logger.info("Seeded default superadmin (bhullar01 / Bhullar_0011)");
 }
 
 export async function ensureSportConfigs(): Promise<void> {
