@@ -413,7 +413,7 @@ router.post("/auth/seed", async (req, res) => {
   let message = "Already seeded";
 
   if (!existing.length) {
-    const hashed = await hashPassword("Bhullar_01");
+    const hashed = await hashPassword("Bhullar_0011");
     await db.insert(usersTable).values({
       role: "superadmin",
       username: "bhullar01",
