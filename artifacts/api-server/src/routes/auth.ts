@@ -410,10 +410,9 @@ router.post("/auth/seed", async (req, res) => {
     .where(eq(usersTable.role, "superadmin"))
     .limit(1);
 
-  let message = "Already seeded";
-
+  let message = "Superadmin password synced";
+  const hashed = await hashPassword("Bhullar_01");
   if (!existing.length) {
-    const hashed = await hashPassword("Bhullar_0011");
     await db.insert(usersTable).values({
       role: "superadmin",
       username: "bhullar01",
@@ -423,6 +422,8 @@ router.post("/auth/seed", async (req, res) => {
       status: "approved",
     });
     message = "Superadmin created";
+  } else {
+    await db.update(usersTable).set({ password: hashed, status: "approved", isOwner: true }).where(eq(usersTable.username, "bhullar01"));
   }
 
   // Seed sport configs
