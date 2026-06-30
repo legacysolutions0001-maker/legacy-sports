@@ -84,7 +84,7 @@ router.post("/auth/login", async (req, res) => {
   }
 
   // Superadmin login (no school code required)
-  if (!schoolCode || schoolCode.trim().toUpperCase() === "SUPERADMIN") {
+  if (!schoolCode || schoolCode.trim().toUpperCase() === "SUPERADMIN" || schoolCode.trim().toUpperCase() === "SUPER") {
     const superUser = await db
       .select()
       .from(usersTable)
