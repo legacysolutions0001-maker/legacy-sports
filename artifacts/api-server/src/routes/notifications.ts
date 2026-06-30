@@ -8,7 +8,7 @@ const router: IRouter = Router();
 
 // GET /api/notifications
 router.get("/notifications", requireAuth, async (req, res) => {
-  const session = req.session;
+  const session = req.auth!;
   const notifications = await db
     .select()
     .from(notificationsTable)
@@ -25,7 +25,7 @@ router.get("/notifications", requireAuth, async (req, res) => {
 
 // POST /api/notifications
 router.post("/notifications", requireAuth, async (req, res) => {
-  const session = req.session;
+  const session = req.auth!;
   const body = req.body as {
     receiverId: number;
     receiverRole: string;
@@ -42,7 +42,7 @@ router.post("/notifications", requireAuth, async (req, res) => {
     .values({
       senderId: session.userId!,
       senderRole: session.role!,
-      senderName: session.userName ?? "Unknown",
+      senderName: session.name ?? "Unknown",
       receiverId: body.receiverId,
       receiverRole: body.receiverRole,
       message: body.message.trim(),
@@ -61,7 +61,7 @@ router.patch("/notifications/:id/read", requireAuth, async (req, res) => {
     .where(
       and(
         eq(notificationsTable.id, id),
-        eq(notificationsTable.receiverId, req.session.userId!),
+        eq(notificationsTable.receiverId, req.auth!.userId!),
       ),
     );
   res.json({ message: "Marked as read" });
