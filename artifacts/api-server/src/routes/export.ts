@@ -35,7 +35,7 @@ router.get(
   "/export/users",
   requireRole("superadmin", "school_admin", "sub_admin", "coach"),
   async (req, res) => {
-    const session = req.session;
+    const session = req.auth!;
     const type = String(req.query["type"] ?? "players");
     const role = type === "coaches" ? "coach" : "player";
 
@@ -99,7 +99,7 @@ router.get(
   "/export/attendance",
   requireRole("superadmin", "school_admin", "sub_admin", "coach"),
   async (req, res) => {
-    const session = req.session;
+    const session = req.auth!;
     const conditions: ReturnType<typeof eq>[] = [];
 
     if (session.role === "coach") {
