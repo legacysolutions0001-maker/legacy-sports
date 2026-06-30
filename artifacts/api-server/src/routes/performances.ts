@@ -9,7 +9,7 @@ const router: IRouter = Router();
 // GET /api/performances
 router.get("/performances", requireAuth, async (req, res) => {
   const { playerId, coachId } = req.query as Record<string, string>;
-  const session = req.session;
+  const session = req.auth!;
 
   const conditions = [];
 
@@ -67,7 +67,7 @@ router.get("/performances", requireAuth, async (req, res) => {
 
 // POST /api/performances
 router.post("/performances", requireRole("coach", "school_admin", "superadmin"), async (req, res) => {
-  const session = req.session;
+  const session = req.auth!;
   const body = req.body as {
     playerId: number;
     sport: string;
@@ -118,7 +118,7 @@ router.post("/performances", requireRole("coach", "school_admin", "superadmin"),
 // DELETE /api/performances/:id
 router.delete("/performances/:id", requireRole("coach", "school_admin", "superadmin"), async (req, res) => {
   const id = parseInt(String(req.params["id"]));
-  const session = req.session;
+  const session = req.auth!;
 
   // Non-superadmins can only delete performances of their own school's players
   if (session.role !== "superadmin" && session.schoolId) {
