@@ -24,7 +24,7 @@ async function generateUniqueCode(prefix: string, column: typeof usersTable.play
 // GET /api/users
 router.get("/users", requireAuth, async (req, res) => {
   const { role, schoolId, status } = req.query as Record<string, string>;
-  const session = req.session;
+  const session = req.auth!;
 
   let targetSchoolId: number | undefined;
 
@@ -71,7 +71,7 @@ router.get("/users", requireAuth, async (req, res) => {
 // GET /api/users/:id
 router.get("/users/:id", requireAuth, async (req, res) => {
   const id = parseInt(String(req.params["id"]));
-  const session = req.session;
+  const session = req.auth!;
 
   const user = await db
     .select()
@@ -102,7 +102,7 @@ router.get("/users/:id", requireAuth, async (req, res) => {
 // PUT /api/users/:id
 router.put("/users/:id", requireAuth, async (req, res) => {
   const id = parseInt(String(req.params["id"]));
-  const session = req.session;
+  const session = req.auth!;
   const body = req.body as Partial<typeof usersTable.$inferInsert> & { password?: string };
 
   if (session.userId !== id && !["superadmin", "school_admin", "sub_admin"].includes(session.role ?? "")) {
@@ -197,7 +197,7 @@ router.patch("/users/:id/status", requireRole("superadmin", "school_admin", "coa
     return;
   }
 
-  const session = req.session;
+  const session = req.auth!;
   if (session.role === "coach" && user[0]!.role !== "player") {
     res.status(403).json({ error: "Coaches can only manage players" });
     return;
@@ -250,7 +250,7 @@ router.post("/users/:id/reset-password", requireRole("superadmin", "school_admin
     return;
   }
   const t = target[0]!;
-  const session = req.session;
+  const session = req.auth!;
 
   const ALLOWED_RESET: Record<string, string[]> = {
     superadmin: ["school_admin"],
@@ -295,7 +295,7 @@ router.patch("/users/:id/fitness", requireRole("coach", "school_admin", "superad
 
 // POST /api/users — create user (admin)
 router.post("/users", requireRole("superadmin", "school_admin", "sub_admin", "coach"), async (req, res) => {
-  const session = req.session;
+  const session = req.auth!;
   const body = req.body as {
     schoolId?: number;
     role?: string;
