@@ -6,54 +6,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy-frontend:
-    name: Deploy Frontend to Cloudflare Pages
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-      - name: Build frontend
-        run: pnpm --filter @workspace/web run build
-        env:
-          NODE_ENV: production
-          BASE_PATH: /
-          PORT: 5173
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy artifacts/web/dist/public --project-name=legacy-sports --branch=main
-
   deploy-api:
     name: Deploy API to Cloudflare Workers
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'pnpm'
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-      - name: Build API server
+          node-version: "20"
+          cache: "pnpm"
+      - run: pnpm install --no-frozen-lockfile
+      - name: Build API
         run: pnpm --filter @workspace/api-server run build
         env:
-          PORT: 8080
-          BASE_PATH: /api
-      - name: Deploy API to Cloudflare Workers
+          PORT: "8080"
+      - name: Deploy API Worker
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -65,3 +33,28 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+
+  deploy-frontend:
+    name: Deploy Frontend to Cloudflare Pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+      - run: pnpm install --no-frozen-lockfile
+      - name: Build Frontend
+        run: pnpm --filter @workspace/web run build
+        env:
+          NODE_ENV: production
+          BASE_PATH: /
+          PORT: "5173"
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+      - name: Deploy Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy artifacts/web/dist/public --project-name=legacy-sports --branch=main
