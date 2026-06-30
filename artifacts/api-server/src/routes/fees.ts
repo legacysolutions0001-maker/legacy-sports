@@ -8,7 +8,7 @@ const router: IRouter = Router();
 
 // GET /api/fees?schoolId=&playerId=
 router.get("/fees", requireAuth, async (req, res) => {
-  const session = req.session;
+  const session = req.auth!;
   const playerIdRaw = req.query["playerId"];
   const schoolIdRaw = req.query["schoolId"];
 
@@ -40,7 +40,7 @@ router.post(
   "/fees",
   requireRole("superadmin", "school_admin", "sub_admin"),
   async (req, res) => {
-    const session = req.session;
+    const session = req.auth!;
     const body = req.body as {
       playerId?: number;
       amount?: number;
@@ -101,7 +101,7 @@ router.patch(
   "/fees/:id",
   requireRole("superadmin", "school_admin", "sub_admin"),
   async (req, res) => {
-    const session = req.session;
+    const session = req.auth!;
     const id = parseInt(String(req.params["id"]));
     const existing = await db
       .select()
@@ -147,7 +147,7 @@ router.delete(
   "/fees/:id",
   requireRole("superadmin", "school_admin"),
   async (req, res) => {
-    const session = req.session;
+    const session = req.auth!;
     const id = parseInt(String(req.params["id"]));
     const existing = await db
       .select()
