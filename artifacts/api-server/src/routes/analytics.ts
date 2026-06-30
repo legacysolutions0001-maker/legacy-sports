@@ -13,7 +13,7 @@ const router: IRouter = Router();
 
 // GET /api/analytics/summary
 router.get("/analytics/summary", requireRole("superadmin", "school_admin", "sub_admin"), async (req, res) => {
-  const session = req.session;
+  const session = req.auth!;
   const isSuperadmin = session.role === "superadmin";
   const schoolId = session.schoolId ?? null;
 
@@ -112,7 +112,7 @@ router.get("/analytics/summary", requireRole("superadmin", "school_admin", "sub_
 
 // GET /api/analytics/leaderboard
 router.get("/analytics/leaderboard", requireAuth, async (req, res) => {
-  const session = req.session;
+  const session = req.auth!;
   const { sport } = req.query as Record<string, string>;
   const schoolIdQuery = req.query["schoolId"] as string | undefined;
 
