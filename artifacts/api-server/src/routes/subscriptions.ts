@@ -63,7 +63,7 @@ router.put("/pricing", requireRole("superadmin"), async (req, res) => {
 
 // ── SUBSCRIPTIONS ──────────────────────────────────────────────────────────
 router.get("/subscriptions", requireRole("superadmin", "school_admin", "sub_admin"), async (req, res) => {
-  if (req.session.role === "superadmin") {
+  if (req.auth!.role === "superadmin") {
     const rows = await db
       .select()
       .from(subscriptionsTable)
@@ -71,7 +71,7 @@ router.get("/subscriptions", requireRole("superadmin", "school_admin", "sub_admi
     res.json(rows);
     return;
   }
-  const schoolId = req.session.schoolId;
+  const schoolId = req.auth!.schoolId;
   if (!schoolId) {
     res.json([]);
     return;
@@ -103,8 +103,8 @@ router.get(
   async (req, res) => {
     const schoolId = parseInt(String(req.params["schoolId"]));
     if (
-      req.session.role !== "superadmin" &&
-      req.session.schoolId !== schoolId
+      req.auth!.role !== "superadmin" &&
+      req.auth!.schoolId !== schoolId
     ) {
       res.status(403).json({ error: "Forbidden" });
       return;
@@ -142,7 +142,7 @@ router.get(
       return;
     }
     // School admins can only download their own invoices
-    if (req.session.role !== "superadmin" && req.session.schoolId !== inv.schoolId) {
+    if (req.auth!.role !== "superadmin" && req.auth!.schoolId !== inv.schoolId) {
       res.status(403).json({ error: "Forbidden" });
       return;
     }
@@ -172,12 +172,12 @@ router.get(
 // ── INVOICES ───────────────────────────────────────────────────────────────
 router.get("/invoices", requireRole("superadmin", "school_admin", "sub_admin"), async (req, res) => {
   const conds = [];
-  if (req.session.role !== "superadmin") {
-    if (!req.session.schoolId) {
+  if (req.auth!.role !== "superadmin") {
+    if (!req.auth!.schoolId) {
       res.json([]);
       return;
     }
-    conds.push(eq(invoicesTable.schoolId, req.session.schoolId));
+    conds.push(eq(invoicesTable.schoolId, req.auth!.schoolId));
   } else if (req.query["schoolId"]) {
     conds.push(
       eq(invoicesTable.schoolId, parseInt(String(req.query["schoolId"]))),
@@ -332,12 +332,12 @@ router.post(
 
 router.get("/reminders", requireRole("superadmin", "school_admin", "sub_admin"), async (req, res) => {
   const conds = [];
-  if (req.session.role !== "superadmin") {
-    if (!req.session.schoolId) {
+  if (req.auth!.role !== "superadmin") {
+    if (!req.auth!.schoolId) {
       res.json([]);
       return;
     }
-    conds.push(eq(reminderLogTable.schoolId, req.session.schoolId));
+    conds.push(eq(reminderLogTable.schoolId, req.auth!.schoolId));
   }
   if (req.query["invoiceId"]) {
     conds.push(
