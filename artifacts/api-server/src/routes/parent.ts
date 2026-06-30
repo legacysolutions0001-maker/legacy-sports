@@ -1,4 +1,5 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
+import { requireAuth } from "../middlewares/requireAuth";
 import { eq, and, desc, gte } from "drizzle-orm";
 import { db } from "../lib/db";
 import {
@@ -16,7 +17,7 @@ const router: IRouter = Router();
 
 // ── Middleware ─────────────────────────────────────────────────────────────
 function requireParentAuth(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.userId || req.session.role !== "parent") {
+  if (!req.auth!.userId || req.auth!.role !== "parent") {
     res.status(401).json({ error: "Not authenticated as parent" });
     return;
   }
@@ -35,7 +36,7 @@ async function getLinkedPlayerId(parentUserId: number): Promise<number | null> {
 
 // ── GET /api/parent/me ─────────────────────────────────────────────────────
 router.get("/parent/me", requireParentAuth, async (req, res) => {
-  const parentId = req.session.userId!;
+  const parentId = req.auth!.userId!;
 
   const parent = await db
     .select({
@@ -50,8 +51,7 @@ router.get("/parent/me", requireParentAuth, async (req, res) => {
     .limit(1);
 
   if (!parent.length) {
-    req.session.destroy(() => {});
-    res.status(401).json({ error: "Session invalid" });
+        res.status(401).json({ error: "Session invalid" });
     return;
   }
 
@@ -110,7 +110,7 @@ router.get("/parent/me", requireParentAuth, async (req, res) => {
 
 // ── GET /api/parent/child ──────────────────────────────────────────────────
 router.get("/parent/child", requireParentAuth, async (req, res) => {
-  const parentId = req.session.userId!;
+  const parentId = req.auth!.userId!;
   const playerId = await getLinkedPlayerId(parentId);
 
   if (!playerId) {
@@ -147,7 +147,7 @@ router.get("/parent/child", requireParentAuth, async (req, res) => {
 
 // ── GET /api/parent/attendance ─────────────────────────────────────────────
 router.get("/parent/attendance", requireParentAuth, async (req, res) => {
-  const parentId = req.session.userId!;
+  const parentId = req.auth!.userId!;
   const playerId = await getLinkedPlayerId(parentId);
 
   if (!playerId) {
@@ -176,7 +176,7 @@ router.get("/parent/attendance", requireParentAuth, async (req, res) => {
 
 // ── GET /api/parent/performances ──────────────────────────────────────────
 router.get("/parent/performances", requireParentAuth, async (req, res) => {
-  const parentId = req.session.userId!;
+  const parentId = req.auth!.userId!;
   const playerId = await getLinkedPlayerId(parentId);
 
   if (!playerId) { res.json([]); return; }
@@ -194,7 +194,7 @@ router.get("/parent/performances", requireParentAuth, async (req, res) => {
 
 // ── GET /api/parent/fees ───────────────────────────────────────────────────
 router.get("/parent/fees", requireParentAuth, async (req, res) => {
-  const parentId = req.session.userId!;
+  const parentId = req.auth!.userId!;
   const playerId = await getLinkedPlayerId(parentId);
 
   if (!playerId) { res.json({ records: [], summary: { totalDue: 0, totalPaid: 0 } }); return; }
@@ -214,7 +214,7 @@ router.get("/parent/fees", requireParentAuth, async (req, res) => {
 
 // ── GET /api/parent/sessions ───────────────────────────────────────────────
 router.get("/parent/sessions", requireParentAuth, async (req, res) => {
-  const schoolId = req.session.schoolId;
+  const schoolId = req.auth!.schoolId;
   if (!schoolId) { res.json([]); return; }
 
   const now = new Date();
@@ -230,7 +230,7 @@ router.get("/parent/sessions", requireParentAuth, async (req, res) => {
 
 // ── GET /api/parent/notifications ─────────────────────────────────────────
 router.get("/parent/notifications", requireParentAuth, async (req, res) => {
-  const parentId = req.session.userId!;
+  const parentId = req.auth!.userId!;
   const playerId = await getLinkedPlayerId(parentId);
 
   const receiverId = playerId ?? parentId;
