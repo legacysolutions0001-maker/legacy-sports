@@ -51,7 +51,7 @@ function canWrite(sessionRole: string | undefined, sessionSchoolId: number | nul
 
 // GET /api/school-settings — for the caller's own school
 router.get("/school-settings", requireAuth, async (req, res) => {
-  const s = req.session;
+  const s = req.auth!;
   if (s.role === "superadmin") {
     res.json({ schoolId: 0, ...defaultFlags() });
     return;
@@ -65,7 +65,7 @@ router.get("/school-settings", requireAuth, async (req, res) => {
 
 // PATCH /api/school-settings — update caller's own school
 router.patch("/school-settings", requireRole("school_admin", "sub_admin", "superadmin"), async (req, res) => {
-  const s = req.session;
+  const s = req.auth!;
   const targetId = s.role === "superadmin"
     ? Number((req.body as Record<string, unknown>)?.["schoolId"]) || 0
     : s.schoolId!;
@@ -92,7 +92,7 @@ router.patch("/school-settings", requireRole("school_admin", "sub_admin", "super
 
 // GET /api/schools/:id/settings — superadmin or same-school user
 router.get("/schools/:id/settings", requireAuth, async (req, res) => {
-  const s = req.session;
+  const s = req.auth!;
   const id = parseInt(String(req.params["id"]));
   if (!canRead(s.role, s.schoolId, id)) {
     res.status(403).json({ error: "Access denied" });
@@ -103,7 +103,7 @@ router.get("/schools/:id/settings", requireAuth, async (req, res) => {
 
 // PATCH /api/schools/:id/settings — superadmin or school admin of THAT school
 router.patch("/schools/:id/settings", requireRole("superadmin", "school_admin", "sub_admin"), async (req, res) => {
-  const s = req.session;
+  const s = req.auth!;
   const id = parseInt(String(req.params["id"]));
   if (!canWrite(s.role, s.schoolId, id)) {
     res.status(403).json({ error: "Access denied" });
