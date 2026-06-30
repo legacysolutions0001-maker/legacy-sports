@@ -8,7 +8,7 @@ const router: IRouter = Router();
 
 // GET /api/messages — list conversations (latest message per peer)
 router.get("/messages", requireAuth, async (req, res) => {
-  const session = req.session;
+  const session = req.auth!;
   const userId = session.userId!;
   const rows = await db
     .select()
@@ -25,7 +25,7 @@ router.get("/messages", requireAuth, async (req, res) => {
 
 // GET /api/messages/:peerId — full thread with a peer
 router.get("/messages/:peerId", requireAuth, async (req, res) => {
-  const session = req.session;
+  const session = req.auth!;
   const userId = session.userId!;
   const peerId = parseInt(String(req.params["peerId"]));
   const rows = await db
@@ -62,7 +62,7 @@ router.get("/messages/:peerId", requireAuth, async (req, res) => {
 
 // POST /api/messages — send a message
 router.post("/messages", requireAuth, async (req, res) => {
-  const session = req.session;
+  const session = req.auth!;
   const userId = session.userId!;
   const { receiverId, body } = req.body as {
     receiverId?: number;
