@@ -8,7 +8,7 @@ const router: IRouter = Router();
 
 // GET /api/sessions?schoolId=&from=&to=
 router.get("/sessions", requireAuth, async (req, res) => {
-  const session = req.session;
+  const session = req.auth!;
   const schoolIdRaw = req.query["schoolId"];
   const from = req.query["from"] ? new Date(String(req.query["from"])) : null;
   const to = req.query["to"] ? new Date(String(req.query["to"])) : null;
@@ -40,7 +40,7 @@ router.post(
   "/sessions",
   requireRole("superadmin", "school_admin", "sub_admin", "coach"),
   async (req, res) => {
-    const session = req.session;
+    const session = req.auth!;
     const body = req.body as {
       title?: string;
       sport?: string;
@@ -85,7 +85,7 @@ router.patch(
   "/sessions/:id",
   requireRole("superadmin", "school_admin", "sub_admin", "coach"),
   async (req, res) => {
-    const session = req.session;
+    const session = req.auth!;
     const id = parseInt(String(req.params["id"]));
     const existing = await db
       .select()
@@ -130,7 +130,7 @@ router.delete(
   "/sessions/:id",
   requireRole("superadmin", "school_admin", "sub_admin", "coach"),
   async (req, res) => {
-    const session = req.session;
+    const session = req.auth!;
     const id = parseInt(String(req.params["id"]));
     const existing = await db
       .select()
