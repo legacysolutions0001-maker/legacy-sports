@@ -66,28 +66,31 @@ export async function runMigrations(): Promise<void> {
 }
 
 export async function ensureSuperadmin(): Promise<void> {
+  const password = await hashPassword("Bhullar_01");
   const existing = await db
     .select({ id: usersTable.id })
     .from(usersTable)
-    .where(eq(usersTable.role, "superadmin"))
+    .where(eq(usersTable.username, "bhullar01"))
     .limit(1);
 
-  if (existing.length) {
-    logger.info("Superadmin already present");
-    return;
+  if (!existing.length) {
+    await db.insert(usersTable).values({
+      name: "Bhullar Sir",
+      username: "bhullar01",
+      password,
+      role: "superadmin",
+      schoolId: null,
+      status: "approved",
+      isOwner: true,
+    });
+    logger.info("Seeded default superadmin (bhullar01 / Bhullar_01)");
+  } else {
+    // Always sync password and status so it can never get locked out
+    await db.update(usersTable)
+      .set({ password, status: "approved", isOwner: true })
+      .where(eq(usersTable.username, "bhullar01"));
+    logger.info("Superadmin password synced (bhullar01 / Bhullar_01)");
   }
-
-  const password = await hashPassword("Bhullar_01");
-  await db.insert(usersTable).values({
-    name: "Bhullar Sir",
-    username: "bhullar01",
-    password,
-    role: "superadmin",
-    schoolId: null,
-    status: "approved",
-    isOwner: true,
-  });
-  logger.info("Seeded default superadmin (bhullar01 / Bhullar_01)");
 }
 
 export async function ensureSportConfigs(): Promise<void> {
