@@ -78,7 +78,7 @@ router.get(
   "/letters",
   requireRole(...STAFF_ROLES),
   async (req, res) => {
-    const session = req.session;
+    const session = req.auth!;
     const conditions = [];
     if (session.role !== "superadmin") {
       if (!session.schoolId) {
@@ -101,7 +101,7 @@ router.post(
   "/letters/generate",
   requireRole(...STAFF_ROLES),
   async (req, res) => {
-    const session = req.session;
+    const session = req.auth!;
     const body = req.body as {
       type?: string;
       prompt?: string;
@@ -171,7 +171,7 @@ router.delete(
   "/letters/:id",
   requireRole(...STAFF_ROLES),
   async (req, res) => {
-    const session = req.session;
+    const session = req.auth!;
     const id = parseInt(String(req.params["id"]));
     const existing = await db
       .select()
@@ -198,7 +198,7 @@ router.get(
   "/letters/:id/pdf",
   requireRole(...STAFF_ROLES),
   async (req, res) => {
-    const session = req.session;
+    const session = req.auth!;
     const id = parseInt(String(req.params["id"]));
     const rows = await db
       .select()
@@ -231,7 +231,7 @@ router.get(
   "/certificates",
   requireRole(...STAFF_ROLES),
   async (req, res) => {
-    const session = req.session;
+    const session = req.auth!;
     const conditions = [];
     if (session.role !== "superadmin") {
       if (!session.schoolId) {
@@ -265,7 +265,7 @@ router.post(
   "/certificates/generate",
   requireRole(...STAFF_ROLES),
   async (req, res) => {
-    const session = req.session;
+    const session = req.auth!;
     const body = req.body as {
       playerId?: number;
       template?: string;
@@ -358,7 +358,7 @@ router.delete(
   "/certificates/:id",
   requireRole(...STAFF_ROLES),
   async (req, res) => {
-    const session = req.session;
+    const session = req.auth!;
     const id = parseInt(String(req.params["id"]));
     const existing = await db
       .select()
@@ -393,7 +393,7 @@ router.get(
   "/certificates/:id/pdf",
   requireRole(...STAFF_ROLES),
   async (req, res) => {
-    const session = req.session;
+    const session = req.auth!;
     const id = parseInt(String(req.params["id"]));
     const rows = await db
       .select()
