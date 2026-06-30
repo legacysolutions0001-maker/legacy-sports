@@ -37,8 +37,8 @@ export default function Login() {
     e.preventDefault();
     const c = code.trim().toUpperCase();
     if (!c) { toast({ title: "School code is required", variant: "destructive" }); return; }
-    if (c === "SUPERADMIN") {
-      setSchool({ code: "SUPERADMIN", name: "System Administration" });
+    if (c === "SUPERADMIN" || c === "SUPER") {
+      setSchool({ code: "SUPERADMIN", name: "Super Admin (SUPER)" });
       setStep(2);
       return;
     }
@@ -105,8 +105,8 @@ export default function Login() {
   };
 
   const goSuperadmin = () => {
-    setCode("SUPERADMIN");
-    setSchool({ code: "SUPERADMIN", name: "System Administration" });
+    setCode("SUPER");
+    setSchool({ code: "SUPERADMIN", name: "Super Admin (SUPER)" });
     setStep(2);
   };
 
