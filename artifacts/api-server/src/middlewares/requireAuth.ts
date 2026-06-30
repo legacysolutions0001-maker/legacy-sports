@@ -1,35 +1,66 @@
 import type { Request, Response, NextFunction } from "express";
-import { getLogoutAllTimestamp } from "../lib/logoutTokens";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.SESSION_SECRET ?? "fallback-dev-secret-change-in-prod";
+
+export interface AuthPayload {
+  userId: number;
+  role: string;
+  schoolId: number | null;
+  name: string;
+  isOwner: boolean;
+  username: string;
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      auth?: AuthPayload;
+    }
+  }
+}
+
+export function signToken(payload: AuthPayload): string {
+  return (jwt as any).sign(payload, JWT_SECRET, { expiresIn: "7d" });
+}
+
+export function verifyToken(token: string): AuthPayload | null {
+  try {
+    return (jwt as any).verify(token, JWT_SECRET) as AuthPayload;
+  } catch {
+    return null;
+  }
+}
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.userId) {
+  const token = req.cookies?.ls_token || req.headers.authorization?.replace("Bearer ", "");
+  if (!token) {
     res.status(401).json({ error: "Not authenticated" });
     return;
   }
-  const loginAt = req.session.loginAt ?? 0;
-  const loggedOutAllAt = getLogoutAllTimestamp(req.session.userId);
-  if (loggedOutAllAt > loginAt) {
-    req.session.destroy(() => {});
-    res.status(401).json({ error: "Session invalidated. Please log in again." });
+  const payload = verifyToken(token);
+  if (!payload) {
+    res.status(401).json({ error: "Invalid or expired session" });
     return;
   }
+  req.auth = payload;
   next();
 }
 
 export function requireRole(...roles: string[]) {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.session.userId) {
+    const token = req.cookies?.ls_token || req.headers.authorization?.replace("Bearer ", "");
+    if (!token) {
       res.status(401).json({ error: "Not authenticated" });
       return;
     }
-    const loginAt = req.session.loginAt ?? 0;
-    const loggedOutAllAt = getLogoutAllTimestamp(req.session.userId);
-    if (loggedOutAllAt > loginAt) {
-      req.session.destroy(() => {});
-      res.status(401).json({ error: "Session invalidated. Please log in again." });
+    const payload = verifyToken(token);
+    if (!payload) {
+      res.status(401).json({ error: "Invalid or expired session" });
       return;
     }
-    if (!req.session.role || !roles.includes(req.session.role)) {
+    req.auth = payload;
+    if (!roles.includes(payload.role)) {
       res.status(403).json({ error: "Insufficient permissions" });
       return;
     }
@@ -38,15 +69,22 @@ export function requireRole(...roles: string[]) {
 }
 
 export function requireSchoolAccess(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.userId) {
+  const token = req.cookies?.ls_token || req.headers.authorization?.replace("Bearer ", "");
+  if (!token) {
     res.status(401).json({ error: "Not authenticated" });
     return;
   }
-  if (req.session.role === "superadmin") {
+  const payload = verifyToken(token);
+  if (!payload) {
+    res.status(401).json({ error: "Invalid or expired session" });
+    return;
+  }
+  req.auth = payload;
+  if (payload.role === "superadmin") {
     next();
     return;
   }
-  if (!req.session.schoolId) {
+  if (!payload.schoolId) {
     res.status(403).json({ error: "No school context" });
     return;
   }
