@@ -9,7 +9,7 @@ const router: IRouter = Router();
 // GET /api/attendance
 router.get("/attendance", requireAuth, async (req, res) => {
   const { userId, schoolId, coachId } = req.query as Record<string, string>;
-  const session = req.session;
+  const session = req.auth!;
 
   const conditions = [];
 
@@ -52,7 +52,7 @@ router.get("/attendance", requireAuth, async (req, res) => {
 
 // POST /api/attendance
 router.post("/attendance", requireRole("coach", "school_admin", "superadmin"), async (req, res) => {
-  const session = req.session;
+  const session = req.auth!;
   const body = req.body as {
     schoolId: number;
     attDate: string;
