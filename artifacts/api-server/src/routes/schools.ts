@@ -106,7 +106,7 @@ router.post("/schools", requireRole("superadmin"), async (req, res) => {
 // GET /api/schools/:id
 router.get("/schools/:id", requireRole("superadmin", "school_admin"), async (req, res) => {
   const id = parseInt(String(req.params["id"]));
-  if (req.session.role !== "superadmin" && req.session.schoolId !== id) {
+  if (req.auth!.role !== "superadmin" && req.auth!.schoolId !== id) {
     res.status(403).json({ error: "You can only access your own school" });
     return;
   }
@@ -125,7 +125,7 @@ router.get("/schools/:id", requireRole("superadmin", "school_admin"), async (req
 // PUT /api/schools/:id
 router.put("/schools/:id", requireRole("superadmin", "school_admin"), async (req, res) => {
   const id = parseInt(String(req.params["id"]));
-  if (req.session.role !== "superadmin" && req.session.schoolId !== id) {
+  if (req.auth!.role !== "superadmin" && req.auth!.schoolId !== id) {
     res.status(403).json({ error: "You can only modify your own school" });
     return;
   }
