@@ -180,14 +180,16 @@ router.post("/auth/seed", async (req, res) => {
   const { masterKey } = req.body as { masterKey?: string };
   if (masterKey !== process.env["SESSION_SECRET"]) { res.status(403).json({ error: "Forbidden" }); return; }
 
-  const hashed = await hashPassword("Bhullar_01");
-  const existing = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.username, "bhullar01")).limit(1);
+  const saUsername = (process.env.SUPER_ADMIN_USERNAME || "bhullar01").toLowerCase();
+  const saPassword = process.env.SUPER_ADMIN_PASSWORD || "Bhullar_01";
+  const hashed = await hashPassword(saPassword);
+  const existing = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.username, saUsername)).limit(1);
   let message = "Superadmin password synced";
   if (!existing.length) {
-    await db.insert(usersTable).values({ role: "superadmin", username: "bhullar01", password: hashed, name: "Super Admin", isOwner: true, status: "approved" });
+    await db.insert(usersTable).values({ role: "superadmin", username: saUsername, password: hashed, name: "Super Admin", isOwner: true, status: "approved" });
     message = "Superadmin created";
   } else {
-    await db.update(usersTable).set({ password: hashed, status: "approved", isOwner: true }).where(eq(usersTable.username, "bhullar01"));
+    await db.update(usersTable).set({ password: hashed, status: "approved", isOwner: true }).where(eq(usersTable.username, saUsername));
   }
 
   const sportCount = await db.select({ id: sportConfigsTable.id }).from(sportConfigsTable).limit(1);
