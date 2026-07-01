@@ -1,6 +1,6 @@
 name = "legacy-sports-api"
 main = "dist/index.mjs"
-compatibility_date = "2024-09-23"
+compatibility_date = "2026-03-17"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
