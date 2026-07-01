@@ -5,3 +5,4 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 NODE_ENV = "production"
+PORT = "8787"
