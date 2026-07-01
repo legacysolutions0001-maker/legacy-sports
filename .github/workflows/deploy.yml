@@ -30,9 +30,13 @@ jobs:
           secrets: |
             DATABASE_URL
             SESSION_SECRET
+            SUPER_ADMIN_USERNAME
+            SUPER_ADMIN_PASSWORD
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          SUPER_ADMIN_USERNAME: ${{ secrets.SUPER_ADMIN_USERNAME }}
+          SUPER_ADMIN_PASSWORD: ${{ secrets.SUPER_ADMIN_PASSWORD }}
 
   deploy-frontend:
     name: Deploy Frontend to Cloudflare Pages
