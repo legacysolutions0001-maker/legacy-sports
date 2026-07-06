@@ -2,17 +2,3 @@ name = "legacy-sports-api"
 main = "src/worker.ts"
 compatibility_date = "2026-03-17"
 compatibility_flags = ["nodejs_compat"]
-
-[[containers]]
-class_name = "LsContainer"
-image = "../../Dockerfile"
-max_instances = 2
-instance_type = "basic"
-
-[[durable_objects.bindings]]
-name = "LS_CONTAINER"
-class_name = "LsContainer"
-
-[[migrations]]
-tag = "v1"
-new_sqlite_classes = ["LsContainer"]
