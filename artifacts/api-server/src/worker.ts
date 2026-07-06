@@ -1,26 +1,40 @@
-import { Container, getContainer } from "@cloudflare/containers";
+import { httpServerHandler } from "cloudflare:node";
 
 export interface Env {
-  LS_CONTAINER: DurableObjectNamespace<LsContainer>;
   DATABASE_URL: string;
   SESSION_SECRET: string;
+  [key: string]: unknown;
 }
 
-export class LsContainer extends Container<Env> {
-  defaultPort = 8080;
-  sleepAfter = "10m";
+const PORT = 8080;
 
-  envVars = {
-    NODE_ENV: "production",
-    PORT: "8080",
-    DATABASE_URL: this.env.DATABASE_URL,
-    SESSION_SECRET: this.env.SESSION_SECRET,
-  };
+let handlerPromise: Promise<{ fetch: (req: Request, env: unknown, ctx: unknown) => Promise<Response> | Response }> | null = null;
+
+async function init(env: Env) {
+  Object.assign(process.env, env);
+
+  const { default: app } = await import("./app");
+  const { logger } = await import("./lib/logger");
+  const { bootstrap } = await import("./lib/bootstrap");
+  const { startBillingScheduler } = await import("./lib/billing");
+
+  await bootstrap().catch((err) => {
+    logger.error({ err }, "Bootstrap (migrations / seed) failed");
+  });
+
+  startBillingScheduler();
+
+  app.listen(PORT);
+
+  return httpServerHandler({ port: PORT });
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const container = getContainer(env.LS_CONTAINER);
-    return container.fetch(request);
+  async fetch(request: Request, env: Env, ctx: unknown): Promise<Response> {
+    if (!handlerPromise) {
+      handlerPromise = init(env);
+    }
+    const handler = await handlerPromise;
+    return handler.fetch(request, env, ctx);
   },
 };
