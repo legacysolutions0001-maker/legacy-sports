@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@cloudflare/containers": "^0.3.7",
     "@types/bcryptjs": "^3.0.0",
     "@types/express-session": "^1.19.0",
     "@types/pg": "^8.20.0",
