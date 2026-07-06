@@ -13,34 +13,16 @@ async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
 
-  const shimDir = path.resolve(artifactDir, "src/shims");
-
   await esbuild({
     entryPoints: [path.resolve(artifactDir, "src/index.ts")],
     platform: "node",
     bundle: true,
-    format: "esm",
+    format: "cjs",
     outdir: distDir,
-    outExtension: { ".js": ".mjs" },
+    outExtension: { ".js": ".cjs" },
     logLevel: "info",
     // Load .sql files as plain text strings
     loader: { ".sql": "text" },
-    alias: {
-      "tty": path.resolve(shimDir, "tty.js"),
-      "node:tty": path.resolve(shimDir, "tty.js"),
-      "async_hooks": path.resolve(shimDir, "async_hooks.js"),
-      "node:async_hooks": path.resolve(shimDir, "async_hooks.js"),
-      "worker_threads": path.resolve(shimDir, "worker_threads.js"),
-      "node:worker_threads": path.resolve(shimDir, "worker_threads.js"),
-      "dns": path.resolve(shimDir, "dns.js"),
-      "node:dns": path.resolve(shimDir, "dns.js"),
-      "net": path.resolve(shimDir, "net.js"),
-      "node:net": path.resolve(shimDir, "net.js"),
-      "tls": path.resolve(shimDir, "tls.js"),
-      "node:tls": path.resolve(shimDir, "tls.js"),
-      "supports-color": path.resolve(shimDir, "supports-color.js"),
-      "node:dns/promises": path.resolve(shimDir, "dns-promises.js"),
-    },
     external: [
       "node:assert", "node:buffer", "node:child_process", "node:cluster",
       "node:console", "node:constants", "node:crypto", "node:dgram",
@@ -73,7 +55,6 @@ async function buildAll() {
       "playwright", "puppeteer", "puppeteer-core", "electron",
     ],
     sourcemap: "linked",
-    footer: { js: "\nexport default {};\n" },
     plugins: [esbuildPluginPino({ transports: ["pino-pretty"] })],
   });
 }
