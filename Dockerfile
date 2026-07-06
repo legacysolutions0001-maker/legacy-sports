@@ -14,6 +14,7 @@ FROM node:24-slim AS runner
 RUN corepack enable && corepack prepare pnpm@10.26.1 --activate
 WORKDIR /app
 ENV NODE_ENV=production
+ENV PORT=8080
 
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/artifacts/api-server/node_modules ./artifacts/api-server/node_modules
