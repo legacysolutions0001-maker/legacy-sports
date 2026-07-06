@@ -261,9 +261,38 @@ export async function ensureSchemaAdditions(): Promise<void> {
   logger.info({ count: added }, "Schema additions ensured");
 }
 
+const BOOTSTRAP_VERSION = "2026-07-06-1";
+
+async function isAlreadyBootstrapped(): Promise<boolean> {
+  try {
+    await pool.query(
+      `CREATE TABLE IF NOT EXISTS bootstrap_meta (id int PRIMARY KEY DEFAULT 1, version text NOT NULL)`,
+    );
+    const r = await pool.query(`SELECT version FROM bootstrap_meta WHERE id = 1`);
+    return r.rows.length > 0 && r.rows[0].version === BOOTSTRAP_VERSION;
+  } catch {
+    return false;
+  }
+}
+
+async function markBootstrapped(): Promise<void> {
+  await pool
+    .query(
+      `INSERT INTO bootstrap_meta (id, version) VALUES (1, $1)
+       ON CONFLICT (id) DO UPDATE SET version = EXCLUDED.version`,
+      [BOOTSTRAP_VERSION],
+    )
+    .catch((err) => logger.warn({ err }, "Could not persist bootstrap marker"));
+}
+
 export async function bootstrap(): Promise<void> {
-  await runMigrations();
-  await ensureSchemaAdditions();
+  const skip = await isAlreadyBootstrapped();
+  if (!skip) {
+    await runMigrations();
+    await ensureSchemaAdditions();
+    await ensureSportConfigs();
+    await markBootstrapped();
+  }
+  // Cheap (2 queries) — always run so password/status can never drift or lock out.
   await ensureSuperadmin();
-  await ensureSportConfigs();
 }

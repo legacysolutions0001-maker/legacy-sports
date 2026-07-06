@@ -2,3 +2,7 @@ name = "legacy-sports-api"
 main = "src/worker.ts"
 compatibility_date = "2026-03-17"
 compatibility_flags = ["nodejs_compat"]
+
+[[migrations]]
+tag = "v2"
+deleted_classes = ["LsContainer"]
